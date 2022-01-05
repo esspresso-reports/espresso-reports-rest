@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/espresso-report-api.iml" filepath="$PROJECT_DIR$/.idea/espresso-report-api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../espresso-report-docker/.idea/espresso-report-docker.iml" filepath="$PROJECT_DIR$/../espresso-report-docker/.idea/espresso-report-docker.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../espresso-report-notifier/.idea/espresso-report-notifier.iml" filepath="$PROJECT_DIR$/../espresso-report-notifier/.idea/espresso-report-notifier.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../espresso-report-ui/.idea/espresso-report-ui.iml" filepath="$PROJECT_DIR$/../espresso-report-ui/.idea/espresso-report-ui.iml" />
+    </modules>
+  </component>
+</project>
