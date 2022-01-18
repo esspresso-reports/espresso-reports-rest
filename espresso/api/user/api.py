@@ -4,8 +4,8 @@ from flask_restx import Resource, reqparse
 
 from espresso.api.user import user_api, user_dto
 from espresso.api.user.service import update_user, delete_user, get_user_by_id, get_all_users, create_user, \
-    update_user_settings
-from espresso.api.authentication import require_oauth
+    update_user_settings, get_users_with_overdue_report
+from espresso.api.auth import require_oauth
 
 
 @user_api.route('/')
@@ -20,10 +20,11 @@ class UserListResource(Resource):
         if current_app.config['ESPRESSO_ADMIN_ROLE'] not in current_token['resource_access']['espresso']['roles']:
             user_api.abort(401, "User is not authorized to view this resources")
 
-        return get_all_users(report_overdue=args.get('report_overdue'))
+        if args.get('report_overdue'):
+            return get_users_with_overdue_report()
+        return get_all_users()
 
     @require_oauth('profile')
-    @user_api.doc('create new user')
     @user_api.expect(user_dto, validate=True)
     def post(self):
         new_user = request.json
@@ -32,9 +33,9 @@ class UserListResource(Resource):
             user_api.abort(401, "User is not authorized to execute this operation")
 
         create_user(new_user)
+        return 'user successfully created', 201
 
     @require_oauth('profile')
-    @user_api.doc('modify existing user')
     @user_api.expect(user_dto, validate=True)
     def put(self):
         modified_user = request.json
@@ -44,18 +45,18 @@ class UserListResource(Resource):
             user_api.abort(401, "User is not authorized to execute this operation")
 
         update_user(modified_user)
+        return 'user successfully updated', 201
 
 
 @user_api.route('/<user_id>')
-@user_api.param('user_id', 'The User identifier')
-@user_api.response(404, 'User not found.')
+@user_api.param('user_id', 'identifier of user')
 class UserResource(Resource):
 
     @require_oauth('profile')
-    @user_api.doc('get a user identified by id')
     @user_api.marshal_with(user_dto)
     def get(self, user_id):
-        if current_token['sub'] != user_id or current_app.config['ESPRESSO_ADMIN_ROLE'] not in current_token['resource_access']['espresso']['roles']:
+        if current_token['sub'] != user_id or current_app.config['ESPRESSO_ADMIN_ROLE'] not in \
+                current_token['resource_access']['espresso']['roles']:
             user_api.abort(401, "User is not authorized to view this resource")
 
         user = get_user_by_id(user_id)
@@ -63,26 +64,26 @@ class UserResource(Resource):
         if not user:
             user_api.abort(404, "User not found")
         else:
-            return user
+            return 200, user
 
     @require_oauth('profile')
-    @user_api.doc('delete user')
     def delete(self, user_id):
-        if current_token['sub'] != user_id and current_app.config['ESPRESSO_ADMIN_ROLE'] not in current_token['resource_access']['espresso']['roles']:
+        if current_token['sub'] != user_id and current_app.config['ESPRESSO_ADMIN_ROLE'] not in \
+                current_token['resource_access']['espresso']['roles']:
             user_api.abort(401, "User is not authorized to delete this resource")
 
         delete_user(user_id)
+        return 204, 'user successfully deleted'
 
 
 @user_api.route('/<user_id>/settings')
 @user_api.param('user_id', 'The User identifier')
-@user_api.response(404, 'User not found.')
 class UserResource(Resource):
 
     @require_oauth('profile')
-    @user_api.doc('get a user settings')
     def get(self, user_id):
-        if current_token['sub'] != user_id and current_app.config['ESPRESSO_ADMIN_ROLE'] not in current_token['resource_access']['espresso']['roles']:
+        if current_token['sub'] != user_id and current_app.config['ESPRESSO_ADMIN_ROLE'] not in \
+                current_token['resource_access']['espresso']['roles']:
             user_api.abort(401, "User is not authorized to view this resource")
 
         user = get_user_by_id(user_id)
@@ -90,12 +91,13 @@ class UserResource(Resource):
         if not user:
             user_api.abort(404, "User not found")
         else:
-            return user.settings
+            return 200, user.settings
 
     @require_oauth('profile')
     @user_api.doc('update user settings')
     def post(self, user_id):
-        if current_token['sub'] != user_id and current_app.config['ESPRESSO_ADMIN_ROLE'] not in current_token['resource_access']['espresso']['roles']:
+        if current_token['sub'] != user_id and current_app.config['ESPRESSO_ADMIN_ROLE'] not in \
+                current_token['resource_access']['espresso']['roles']:
             user_api.abort(401, "User is not authorized to delete this resource")
 
         update_user_settings(user_id, request.json)
